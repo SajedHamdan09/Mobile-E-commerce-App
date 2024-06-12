@@ -1,5 +1,5 @@
 # Mobile-E-commerce-App
-Developed an e-commerce app with Flutter, integrating SQFlite for database management. Ensured user-friendly design, efficient data handling, and testing on Android Studio. Technologies: Flutter, SQFlite, Android Studio.
+Developed a mobile e-commerce app with Flutter, implementing design, and database algorithms. Utilized SQFlite for data storage, ensuring user information, cart items, and wishlist items are managed efficiently. Integrated APIs for fetching external data, ensuring dynamic content. Ensured a user-friendly interface and rigorous testing on Android Studio. Technologies: Flutter, SQFlite, Android Studio.
 
 
 # User Interface
