@@ -6,5 +6,5 @@ Developed an e-commerce app with Flutter, integrating SQFlite for database manag
 
 <p float="left">
   <img src="UI_Images/home1.jpg" width="200" />
-  <img src="/UI_Images/home2.jpg" width="200" /> 
+  <img src="UI_Images/home2.jpg" width="200" /> 
 </p>
