@@ -67,5 +67,5 @@ Developed a mobile e-commerce app with Flutter, implementing design, and databas
 ## Search Page
 
 <div>
-  <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/search.png" width="200" />
+  <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/searchPage.png" width="200" />
 </div>
