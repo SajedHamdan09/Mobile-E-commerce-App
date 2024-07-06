@@ -1,18 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:project_flutter2/devices.dart'; // Import necessary widgets
+import 'package:project_flutter2/gadgets.dart';
 import 'package:project_flutter2/laptops.dart';
-import 'package:project_flutter2/main.dart';
 import 'package:project_flutter2/screens.dart';
-import 'devices.dart';
-import 'gadgets.dart'; // Import services
+import 'package:project_flutter2/main.dart';
 
 Future<List<dynamic>> fetchData() async {
-  final response = await http.get(Uri.parse(
-      'https://fakestoreapi.in/api/products?limit=10'));
+  final response = await http
+      .get(Uri.parse('https://fakestoreapi.in/api/products?limit=10'));
   if (response.statusCode == 200) {
-    return json.decode(response.body)['products'];
+    final responseData = json.decode(response.body);
+    if (responseData['products'] is List<dynamic>) {
+      return responseData['products'];
+    } else {
+      throw Exception('Invalid data format from API');
+    }
   } else {
     throw Exception('Failed to load data from API');
   }
@@ -33,14 +37,8 @@ class _SearchState extends State<Search> {
       setState(() {
         _myProducts = fetchedProducts;
       });
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showSearch(context: context, delegate: CitySearchDelegate(_myProducts))
-          .then((value) => Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-            (Route<dynamic> route) => false,
-      )); // Navigate to Home when search is closed
+    }).catchError((error) {
+      print('Error fetching data: $error');
     });
   }
 
@@ -48,52 +46,92 @@ class _SearchState extends State<Search> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Search for Products'),
+        title: Text(
+          'Search Product',
+          style: TextStyle(
+            color: Color(0xFFFF274C77),
+            fontFamily: 'PTSansCaption',
+            fontSize: 24,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search),
+            icon: Icon(Icons.mic),
+            color: Color(0xFFFF274C77),
             onPressed: () {
-              showSearch(context: context, delegate: CitySearchDelegate(_myProducts));
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.search_sharp),
+            color: Color(0xFFFF274C77),
+            onPressed: () {
+              showSearch(
+                  context: context, delegate: CitySearchDelegate(_myProducts));
             },
           ),
         ],
       ),
-      body: ListView.builder(
-        itemCount: _myProducts.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(_myProducts[index]['name']),
-            onTap: () {
-              // Navigate to the specific widget when a product is selected
-              Widget route;
-              switch (_myProducts[index]["route"]) {
-                case 'Devices()':
-                  route = Devices();
-                  break;
-                case 'Gadgets()':
-                  route = Gadgets();
-                  break;
-                case 'Laptops()':
-                  route = Laptops();
-                  break;
-                case 'Screens()':
-                  route = Screens();
-                  break;
-              // Add more cases for other routes...
-                default:
-                  route = HomeScreen(); // Default route
-              }
-              Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => route));
-            },
-          );
-        },
-      ),
+      body: _myProducts.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: _myProducts.length,
+              itemBuilder: (context, index) {
+                return Column(
+                  children: [
+                    ListTile(
+                      title: Text(
+                        _myProducts[index]['title'],
+                        style: TextStyle(
+                            fontSize: 18.0, overflow: TextOverflow.ellipsis),
+                      ),
+                      // subtitle: Text(
+                      //   'Category: ${_myProducts[index]['category']}',
+                      //   style: TextStyle(color: Colors.grey[600]),
+                      // ),
+                      leading: Image.network(
+                        _myProducts[index]['image'],
+                        width: 60.0,
+                        height: 60.0,
+                        fit: BoxFit.cover,
+                      ),
+                      onTap: () {
+                        // Navigate to the specific widget when a product is selected
+                        Widget route;
+                        switch (_myProducts[index]["category"]) {
+                          case 'electronics':
+                            route = Devices();
+                            break;
+                          case 'gadgets':
+                            route = Gadgets();
+                            break;
+                          case 'laptops':
+                            route = Laptops();
+                            break;
+                          case 'screens':
+                            route = Screens();
+                            break;
+                          // Add more cases for other categories...
+                          default:
+                            route = HomeScreen(); // Default route
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => route),
+                        );
+                      },
+                    ),
+                    SizedBox(
+                      height: 25,
+                    )
+                  ],
+                );
+              },
+            ),
     );
   }
 }
 
-class CitySearchDelegate extends SearchDelegate {
+class CitySearchDelegate extends SearchDelegate<String> {
   final List<dynamic> _myProducts;
 
   CitySearchDelegate(this._myProducts);
@@ -102,17 +140,11 @@ class CitySearchDelegate extends SearchDelegate {
   List<Widget> buildActions(BuildContext context) {
     return [
       IconButton(
-        icon: Icon(Icons.mic, color: Color(0xFFFF274C77)),
+        icon: Icon(Icons.clear),
         onPressed: () {
           query = '';
         },
       ),
-      IconButton(
-        icon: Icon(Icons.clear, color: Color(0xFFFF274C77)),
-        onPressed: () {
-          query = '';
-        },
-      )
     ];
   }
 
@@ -122,73 +154,94 @@ class CitySearchDelegate extends SearchDelegate {
       icon: AnimatedIcon(
         icon: AnimatedIcons.menu_arrow,
         progress: transitionAnimation,
-        color: Color(0xFFFF274C77),
       ),
       onPressed: () {
-        close(context, null);
+        close(context, '');
       },
     );
   }
 
   @override
   Widget buildResults(BuildContext context) {
-    return Container();
+    final List<dynamic> filteredProducts = _myProducts
+        .where((product) =>
+            product['title'].toLowerCase().contains(query.toLowerCase()))
+        .toList();
+    return _buildProductList(filteredProducts);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    final suggestionList = query.isEmpty
+    final List<dynamic> suggestionList = query.isEmpty
         ? _myProducts
         : _myProducts
-        .where(
-            (p) => p['name'].toLowerCase().startsWith(query.toLowerCase()))
-        .toList();
+            .where((product) =>
+                product['title'].toLowerCase().startsWith(query.toLowerCase()))
+            .toList();
+    return _buildProductList(suggestionList);
+  }
 
+  Widget _buildProductList(List<dynamic> products) {
     return ListView.builder(
-      itemBuilder: (context, index) => ListTile(
-        onTap: () {
-          // Navigate to the specific widget when a product is selected
-          Widget route;
-          switch (_myProducts[index]["route"]) {
-            case 'Devices()':
-              route = Devices();
-              break;
-            case 'Gadgets()':
-              route = Gadgets();
-              break;
-            case 'Laptops()':
-              route = Laptops();
-              break;
-            case 'Screens()':
-              route = Screens();
-              break;
-          // Add more cases for other routes...
-            default:
-              route = HomeScreen(); // Default route
-          }
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => route));
-        },
-        leading: Image.asset("assets/search.png",
-            color: Color(0xFFFF274C77), width: 35),
-        title: RichText(
-          text: TextSpan(
-            text: suggestionList[index]['name'].substring(0, query.length),
-            style: TextStyle(
-                color: Color(0xFFFF274C77), fontWeight: FontWeight.bold),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return GestureDetector(
+          onTap: () {
+            // Print debug info
+            print('Navigating to ${product['category']}');
+
+            // Navigate to the specific widget when a product is selected
+            Widget route;
+            switch (product['category']) {
+              case 'electronics':
+                route = Devices();
+                break;
+              case 'gadgets':
+                route = Gadgets();
+                break;
+              case 'laptops':
+                route = Laptops();
+                break;
+              case 'screens':
+                route = Screens();
+                break;
+              default:
+                route = HomeScreen(); // Default route
+            }
+
+            // Navigate to the selected route
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => route),
+            );
+          },
+          child: Column(
             children: [
-              TextSpan(
-                text: suggestionList[index]['name'].substring(query.length),
-                style: TextStyle(
-                    color: Color(0xFFFF274C77),
-                    fontFamily: 'Jersey',
-                    fontSize: 27),
+              ListTile(
+                title: Text(
+                  product['title'],
+                  style: TextStyle(fontSize: 18.0),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // subtitle: Text(
+                //   'Category: ${product['category']}',
+                //   style: TextStyle(color: Colors.grey[600]),
+                // ),
+                leading: Image.network(
+                  product['image'],
+                  width: 60.0,
+                  height: 60.0,
+                  fit: BoxFit.cover,
+                ),
               ),
+              SizedBox(
+                height: 25,
+              )
             ],
           ),
-        ),
-      ),
-      itemCount: suggestionList.length,
+        );
+      },
     );
   }
 }
