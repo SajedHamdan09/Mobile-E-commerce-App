@@ -39,6 +39,7 @@ Developed a mobile e-commerce app with Flutter, implementing design, and databas
 
 <div>
   <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/cart.png" width="200" />
+  <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/cart2.png" width="200" />
 </div>
 
 
@@ -57,6 +58,7 @@ Developed a mobile e-commerce app with Flutter, implementing design, and databas
 <div>
   <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/signup.png" width="200" />
   <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/login.png" width="200" />
+  <img src="https://github.com/SajedHamdan09/Mobile-E-commerce-App/blob/main/UI_Images/forgot.png" width="200" />
 </div>
 
 
